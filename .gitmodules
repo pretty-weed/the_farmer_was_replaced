@@ -1,3 +1,4 @@
 [submodule "upstream_non_os"]
 	path = upstream_non_os
-	url = ./upstream_non_os
+	url = git@github.com:pretty-weed/tfwr_game_code.git
+	branch = main
