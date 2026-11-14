@@ -14,6 +14,7 @@ from __builtins__ import (
     South,
     West,
     can_harvest,
+    dig,
     get_entity_type,
     get_ground_type,
     get_hardness,
@@ -64,14 +65,14 @@ def do_observe(
     if KEY_ENT in preset:
         entity = preset[KEY_ENT]
     #if entity_val != None:
-    #	entity = Entities(entity_val)
+    #    entity = Entities(entity_val)
     #ground_val = None
     if KEY_GROUND in preset:
         ground = preset[KEY_GROUND]
     #if ground_val != None:
-    #	ground = Grounds(ground_val)
-    #	if ground_val == None:
-    #		ground = Grounds(ground_val)
+    #    ground = Grounds(ground_val)
+    #    if ground_val == None:
+    #        ground = Grounds(ground_val)
     if KEY_STABILITY in preset:
         stability = preset[KEY_STABILITY]
     if KEY_HARDNESS in preset:
@@ -182,11 +183,19 @@ def do_harvest(_x: int =-1, _y: int = -1, max_harvest=70*7):
         if here_harvested >= max_harvest or not can_harvest():
             break
 
+def do_dig(x, y):
+    dig()
+
 def do_plant(x:int, y:int):
+    ground_type: Ground | None = None
+    if x < 9 and y < 9:
+        if ground_type != Grounds.Soil:
+            till()
+        plant(Entities.Pumpkin)
+        return Entities.Pumpkin
     to_plant = None
     hay = num_items(Items.Hay)
     wood = num_items(Items.Wood)
-    ground_type: Ground | None = None
     if x == y or abs(x-y) % 2:
         ground_type = get_ground_type()
         if ground_type != Grounds.Soil:
@@ -200,6 +209,10 @@ def do_plant(x:int, y:int):
             to_plant = Entities.Carrot
     elif hay > wood:
         to_plant = Entities.Tree
+    elif ground_type != Grounds.Grassland:
+        # Toremove
+        till()
+        to_plant = Entities.Pumpkin
     while get_water() < 1.0 and num_items(Items.Water) > 0:
         use_item(Items.Water)
     if to_plant != None:
