@@ -62,9 +62,8 @@ def weave(
     if skip:
         cycle_end = world_end - (world_end % skip)-1
     else:
-        cycle_end = world_end-1
-    quick_print("range confs:", "offset", "world_size", "step_moves", "cycle end")
-    print("            ", offset, world_size, step_moves, cycle_end)
+        cycle_end = world_end
+    # quick_print("range confs:", "offset", "world_size", "step_moves", "cycle end")
     x_step=-1
     orig_x = get_pos_x()
     orig_y = get_pos_y()
@@ -76,7 +75,6 @@ def weave(
             px = get_pos_x()
             py = get_pos_y()
 
-            quick_print("x, y", (x, y), orig_x-x, orig_y-y, "points", (px, py), "steps", (x_step, y_step))
             travel = []
             if px == cycle_end and (( even_world and py == 0) or (not even_world and py == cycle_end)):
                 quick_print("far right end corner")
@@ -90,25 +88,24 @@ def weave(
             elif (x_step % 2 and py == 0) or (not(x_step % 2) and py == cycle_end):
                 c1_res = (x_step % 2 and py == 0)
                 c2_res = (not(x_step % 2) and py == cycle_end)
-                quick_print("East cond res:: c1:", c1_res, ", c2:", c2_res)
+                # quick_print("East cond res:: c1:", c1_res, ", c2:", c2_res)
                 
-                if c1_res and c2_res:
-                    quick_print("adding ", step_moves, "moves", East, "because both true")
-                elif c1_res:
-                    quick_print("adding ", step_moves, "moves", East, "because even x and at bottom")
-                elif c2_res:
-                    quick_print("adding ", step_moves, "moves", East, "because odd x and at top")
+                # if c1_res and c2_res:
+                    # quick_print("adding ", step_moves, "moves", East, "because both true")
+                # elif c1_res:
+                    # quick_print("adding ", step_moves, "moves", East, "because even x and at bottom")
+                # elif c2_res:
+                    # quick_print("adding ", step_moves, "moves", East, "because odd x and at top")
                 travel = n_moves(East, step_moves)
             elif x_step % 2:
-                quick_print("adding ", step_moves, "moves", South)
+                # quick_print("adding ", step_moves, "moves", South)
                 travel = n_moves(South, step_moves)
             else:
-                quick_print("adding ", step_moves, "moves", North)
+                # quick_print("adding ", step_moves, "moves", North)
                 travel = n_moves(North, step_moves)
             
             for task in tasks:
                 handle_task(task, counter, px, py)
-            #quick_print("doing moves", travel)
             for t in travel:
                 move(t)
 

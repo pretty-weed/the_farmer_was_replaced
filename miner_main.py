@@ -57,19 +57,32 @@ def find_surface_list(grounds=None, reset=False):
     weave([(1.0, [], check_cell)], reset)
     return found
 
-def mine_neighbor(direction: Direction, z: int | None = None, recursive=0):
+def mine_neighbor(
+        direction: Direction, 
+        x: int | None = None, y: int | None = None, z: int | None = None, 
+        recursive=0, dug: dict[tuple[int,int], int] | None = None) -> dict[tuple[int, int], int]:
+    
     if z == None:
         z = get_pos_z()
+    if y == None:
+        y = get_pos_y()
+    if x == None:
+        x = get_pos_x()
     move(direction)
-    dug = 0
+    pos = (x, y)
+    if dug == None:
+        dug = {pos: 0}
+    else:
+        dug.setdefault(pos, 0)
     while get_pos_z() > z:
         dig()
-        dug += 1
+        dug[pos] += 1
         if recursive > 0:
             for rdir in DIRECTIONS:
-                dug += mine_neighbor(rdir, z, recursive-1)
+                x, y = point_at_direction(rdir, x, y)
+                mine_neighbor(rdir, x, y, z, recursive-1)
     move(opposite_direction(direction))
-    return dug
+    return dug  
 
 # might optimize by returning tuple[tuple[int, int] | None, Direction | None], 
 # or something else to differrentiate those that are immediately adjacent
@@ -139,7 +152,7 @@ def mine_iron(min_coal = COAL_MIN_THRESHOLD, coal_interval_z:int = 5):
             mine_coal(min_coal * 2)
         go_to((center, center), (x, y))
         prospect_here = 0
-        while num_items(Items.Coal) < min_coal:
+        while num_items(Items.Coal) >= min_coal:
 
             prospect: Direction = prospect_iron()
             quick_print("prospect result: ", prospect)

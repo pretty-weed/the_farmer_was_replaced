@@ -27,7 +27,7 @@ def bubble_sort(to_sort: list | dict):
         # Last i elements are already in place, so we don't need to check them
         for j in range(n - i - 1):
             # Traverse the array from 0 to n-i-1
-            # Swap if the element found is greater than the next element
+            # Swap if not yet sorted
             if vals_to_sort[j] > vals_to_sort[j + 1]:
                 vals_to_sort[j], vals_to_sort[j + 1] = vals_to_sort[j + 1], vals_to_sort[j]
                 swapped = True
