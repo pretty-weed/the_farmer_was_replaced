@@ -7,6 +7,7 @@ from __builtins__ import (
     Direction,
     East,
     Entities,
+    Entity,
     Ground,
     Grounds,
     Items,
@@ -113,7 +114,7 @@ def pay_attention(x, y, hyperattentive: float = 0.5, attentiveness: float = 1.0)
     
 
 
-def go_to(pos, x=None, y=None, tasks=None):
+def go_to(pos: tuple[int, int], x=None, y=None, tasks=None):
     if tasks == None:
         tasks = []
     x = resolve_x(x)
@@ -137,6 +138,24 @@ def go_to(pos, x=None, y=None, tasks=None):
         for task in tasks:
             task(x, y)
 
+def do_till():
+    if get_entity_type() == None and get_ground_type() != Grounds.Soil:
+        till()
+        return True
+    return False
+
+_ENT_PRECONDITIONS = {
+    Entities.Bamboo: [do_till],
+    Entities.Carrot: [do_till],
+    Entities.Pumpkin: [do_till],
+    Entities.Sunflower: [do_till],
+}
+
+
+def do_plant(ent: Entity):
+    for precond in get(_ENT_PRECONDITIONS, ent, []):
+        precond()
+    plant(ent)
 
 
 def interrupt(do, return_to, goto = None):
@@ -149,7 +168,7 @@ def replace_rotten(direction, x=None, y=None, stay=False, goto=None):
     if get_entity_type(direction) == Entities.Dead_Pumpkin:
         rx, ry = point_at_direction(direction, x, y)
         move(direction)
-        do_plant(rx, ry)
+        do_farm(rx, ry)
         do_replace_rotten(rx, ry, opposite_direction(direction), goto)
         if goto != None:
             quick_print("after replace_rotten, going to " + str(goto))
@@ -171,8 +190,20 @@ def do_replace_rotten(x:int , y:int, travel: Direction | None = None, goto=None)
     if travel != None:
         replace_rotten(travel, x, y)
 
-def buddy_up():
-    return None
+def buddy_up(replace=False):
+    planted = []
+    companion = get_companion()
+    if companion == None:
+        return planted
+    plant_type, pos = companion
+    go_to(pos)
+    if not can_plant():
+        if replace:
+            harvest()
+        else:
+            return planted
+    do_plant(plant_type)
+    
 
 def do_harvest(_x: int =-1, _y: int = -1, max_harvest=70*7):
     here_harvested = 0
@@ -186,7 +217,7 @@ def do_harvest(_x: int =-1, _y: int = -1, max_harvest=70*7):
 def do_dig(x, y):
     dig()
 
-def do_plant(x:int, y:int):
+def do_farm(x:int, y:int):
     ground_type: Ground | None = None
     if x < 9 and y < 9:
         if ground_type != Grounds.Soil:

@@ -1,47 +1,43 @@
-from __builtins__ import Callable, get_pos_z, get_world_size
-from movement import weave
+from __builtins__ import Callable, dig, get_pos_z
+from movement import go_to, weave
 from tasks import do_dig
 
-base_max_z = get_world_size() * -100
-base_min_z = -base_max_z
-max_z = base_max_z
-min_z = base_min_z
+heightmap = {}
 def measure(x, y):
-    global max_z
-    global min_z
+    global heightmap
     z = get_pos_z()
-    max_z = max(z, max_z)
-    min_z = min(z, min_z)
+    if not z in heightmap:
+        heightmap[z] = []
+    heightmap[z].append((x, y))
 
 
-def do_dig_cond():
-    return  get_pos_z() >= max_z
-
-def main():
-    flatten()
+def main(cont=True):
+    flatten(cont)
 
 def flatten(continue_scrape: bool | Callable[[int,], bool] = True):
     companions = []
     
-    global max_z
-    global min_z
-    iteration = 1
+    global heightmap
+    iteration = -1
     while True:
         iteration += 1
-        if max_z != min_z:
-            max_z = base_max_z
-            min_z = base_min_z
-
+        if len(heightmap) > 1 or iteration == 0:
+            heightmap = {}
             weave([
                 (1.0, [], measure),
             ], False)
 
-            print("max z is "+ str(max_z) + "\nmin z is " + str(min_z))
-            weave(
-                [
-                    (1.0, [do_dig_cond], do_dig)
-                ]
-            )
+            while len(heightmap) > 1:
+                this_z = max(heightmap)
+                here = heightmap[this_z].pop()
+                go_to(here)
+                if not heightmap[this_z]:
+                    heightmap.pop(this_z)
+                dig()
+                if this_z -1 not in heightmap:
+                    heightmap[this_z-1] = [here]
+                else:
+                    heightmap[this_z-1].append(here)
         elif continue_scrape == False:
             break
         elif continue_scrape == True or continue_scrape(iteration):
@@ -53,4 +49,7 @@ def flatten(continue_scrape: bool | Callable[[int,], bool] = True):
             
 
 if __name__ == "__main__":
-    main()
+    layers = 1
+    def do_n(i):
+        return i <= layers
+    main(do_n)

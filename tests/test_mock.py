@@ -1,13 +1,10 @@
-from typing import NamedTuple
+from collections import namedtuple
 
 from .base_test import *
 from .mock_builtin import East, North, South, West
 
+SetPosCase = namedtuple("SetPosCase", ["args", "kwargs", "expected"])
 
-class SetPosCase(NamedTuple):
-    args: list[int]
-    kwargs: dict[str, int]
-    expected: tuple[int, int, int]
 
 _POS_CASES = [
     SetPosCase([1, 2, 3], {}, (1,2,3)),
@@ -53,7 +50,7 @@ class TestSetup(BaseCase):
         mock_builtin.set_map_size(10)
         for ob_case in [(-1, 5), (5, -3), (200, 3), (4, 1000), (-1, 5000), (209390, -923)]:
             with self.subTest(f"Checking that {ob_case} is out of bounds"):
-                with self.assertRaises(ValueError, msg=f"should have raised value error. __pos__ is {mock_builtin.__pos__}"):
+                with self.assertRaises(ValueError, msg=f"should have raised value error. __pos__ is {mock_builtin.__pos__}") as ar:  # noqa: F841
                     mock_builtin.set_pos(*ob_case)
                 self.assertEqual(mock_builtin.get_pos(), (3, 3, 0))
 
@@ -94,12 +91,8 @@ class TestSetup(BaseCase):
                 with self.subTest("3x3 move case", case=case):
                     case.run_case(self)
 
-
-class MoveCase(NamedTuple):
-    expected: tuple[int, int]
-    direction: mock_builtin.Direction
-    origin: tuple[int, int] = (0, 0)
-
+_MoveCase = namedtuple("_MoveCase", ["expected", "direction", "origin"], defaults=[(0, 0)])
+class MoveCase(_MoveCase):
     def run_case(self, test_case:BaseCase):
         mock_builtin.__pos__ = [self.origin[0], self.origin[1], 0]
         mock_builtin.move(self.direction)

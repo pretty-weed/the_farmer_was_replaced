@@ -2,6 +2,7 @@
 
 
 from __builtins__ import (
+    Any,
     Direction,
     East,
     Entities,
@@ -24,16 +25,20 @@ ENT_RENDER = {
     Entities.Dead_Pumpkin: "b",
     Entities.Grass: "g",
 }
-
+def _items(in_dict: dict) -> list[tuple[Any, Any]]:
+    items = []
+    for key in in_dict:
+        items.append((key, in_dict[key]))
+    return items
 ITEMS: dict[Item, set[Entity]] = {
     Items.Hay: {Entities.Grass,}, Items.Wood: {Entities.Tree, Entities.Bush},
     Items.Carrot: {Entities.Carrot,}, Items.Pumpkin: {Entities.Pumpkin,},
     Items.Bamboo: {Entities.Bamboo,}}
 
-ENTITIES: dict[Entity, tuple[str, Item]] = dict()
-for item in ITEMS:
-    for ent in ITEMS[item]:
-        ENTITIES[ent] = (item)
+ENTITIES: dict[Entity, Item] = {}
+for item, entities in _items(ITEMS):
+    for ent in entities:
+        ENTITIES[ent] = item
         
 DIRECTIONS: dict[Direction, tuple[int, int]] = {North: (0, 1), East: (1, 0), South: (0, -1), West: (-1, 0)}
 

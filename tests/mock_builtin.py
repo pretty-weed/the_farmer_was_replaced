@@ -1,14 +1,14 @@
+from enum import Enum
+from logging import addLevelName, getLevelNamesMapping, getLogger
+from os import getenv
 from typing import TypeAlias
 from unittest import mock
 
 from __builtins__ import Direction as Direction
 from __builtins__ import East as East
-from __builtins__ import Entities as Entities
 from __builtins__ import Entity as Entity
 from __builtins__ import Ground as Ground
-from __builtins__ import Grounds as Grounds
 from __builtins__ import Item as Item
-from __builtins__ import Items as Items
 from __builtins__ import North as North
 from __builtins__ import South as South
 from __builtins__ import Unlock as Unlock
@@ -16,6 +16,36 @@ from __builtins__ import Unlocks as Unlocks
 from __builtins__ import West as West
 from __builtins__ import string
 
+LOGGER_NAME = getenv("LOGGER_NAME", __name__)
+LOG_LEVEL = getLevelNamesMapping()[getenv("LOG_LEVEL", "WARNING").upper()]
+LOGGER = getLogger("__name__")
+LOGGER.setLevel(LOG_LEVEL)
+
+OUTPUT_LEVEL = max(getLevelNamesMapping().values()) + 10
+addLevelName(int(OUTPUT_LEVEL), "TEST_OUTPUT")
+
+def output(self, message, *args, **kwargs):
+    if self.isEnabledFor(OUTPUT_LEVEL):
+        self._log(OUTPUT_LEVEL, message, args, **kwargs)
+
+LOGGER.output = output
+
+class Entities(Enum):
+    Bamboo = Entity()
+    Carrot = Entity()
+    Tree = Entity()
+    Bush = Entity()
+    Pumpkin = Entity()
+    Dead_Pumpkin = Entity()
+    Grass = Entity()
+
+class Items(Enum):
+    Hay = Item()
+    Carrot = Item()
+    Wood = Item()
+    Rice = Item()
+    Pumpkin = Item()
+    Bamboo = Item()
 
 def _dir_name(direction: Direction) -> string:
     return {
@@ -27,13 +57,13 @@ def _dir_name(direction: Direction) -> string:
 
 _mocks = {}
 __map_size__ = 12
-__pos__: list[int, int, int] = [0, 0, 0]
+__pos__: list[float] = [0, 0, 0]
 
 _x = 0
 _y = 1
 _z = 2
 
-optionalInt: TypeAlias = int | None
+optionalInt: TypeAlias = float | None
 
 _SETUP_ARGS = {
     "move": (East,)
@@ -46,24 +76,24 @@ def mock_builtin(side_effect):
     return side_effect
 
 @mock_builtin
-def __get_world_size__() -> int:
+def __get_world_size__() -> float:
     return __map_size__
 
 @mock_builtin
-def __get_pos_x__() -> int:
+def __get_pos_x__() -> float:
     return __pos__[_x]
 
 @mock_builtin
-def __get_pos_y__() -> int:
+def __get_pos_y__() -> float:
     return __pos__[_y]
 
 @mock_builtin
-def __get_pos_z__() -> int:
+def __get_pos_z__() -> float:
     return __pos__[_z]
 
 @mock_builtin
 def __quick_print__(*vals):
-    print(*vals)
+    LOGGER.output(*vals)
 
 def __getattr__(name: string):
     if name not in _mocks:
@@ -80,6 +110,7 @@ def reset_all():
 @mock_builtin
 def __move__(direction: Direction, /) -> bool:
     pos = get_pos()
+    LOGGER.debug(f"before move pos: {pos}")
     if direction == North:
         if pos[_y] == __map_size__-1:
             set_pos(y=0)
@@ -102,17 +133,17 @@ def __move__(direction: Direction, /) -> bool:
             set_pos(x=__pos__[_x]-1)
     else:
         raise TypeError(f"{direction} is not a Direction")
-    
+    LOGGER.debug(f"after move pos: {__pos__}")
     return True
 
-def set_map_size(size: int):
+def set_map_size(size: float):
     global __map_size__ 
     __map_size__ = size
 
-def get_pos()-> tuple[int, int, int]:
-    return tuple[int, int, int](__pos__)
+def get_pos()-> tuple[float, float, float]:
+    return tuple[float, float, float](__pos__)
 
-def set_pos(x: optionalInt = None, y: optionalInt = None, z: optionalInt = None) -> tuple[int, int, int]:
+def set_pos(x: optionalInt = None, y: optionalInt = None, z: optionalInt = None) -> tuple[float, float, float]:
     msg = ""
     if x is not None:
         x_low, x_high = x < 0, x >= __map_size__
